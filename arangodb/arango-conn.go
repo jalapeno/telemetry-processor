@@ -1,5 +1,3 @@
-// Borrowed from https://github.com/cisco-ie/jalapeno
-
 package arangodb
 
 import (
@@ -36,7 +34,7 @@ type ArangoConn struct {
 }
 
 var (
-	ErrCollectionNotFound = fmt.Errorf("Could not find collection")
+	ErrCollectionNotFound = fmt.Errorf("could not find collection")
 )
 
 func NewArango(cfg ArangoConfig) (*ArangoConn, error) {
@@ -70,11 +68,34 @@ func NewArango(cfg ArangoConfig) (*ArangoConn, error) {
 		return nil, err
 	}
 
-	// If Jalapeno databse does not exist, the topology is not running, goig into a crash loop
-	db, err := c.Database(context.Background(), cfg.Database)
+	db, err := ensureDatabase(c, cfg)
 	if err != nil {
+		glog.Errorf("Failed to create DB")
 		return nil, err
 	}
 
 	return &ArangoConn{db: db}, nil
+}
+
+func ensureDatabase(c driver.Client, cfg ArangoConfig) (driver.Database, error) {
+	var db driver.Database
+
+	exists, err := c.DatabaseExists(context.Background(), cfg.Database)
+	if err != nil {
+		return db, err
+	}
+
+	if !exists {
+		// Create database
+		db, err = c.CreateDatabase(context.Background(), cfg.Database, nil)
+		if err != nil {
+			return db, err
+		}
+	} else {
+		db, err = c.Database(context.Background(), cfg.Database)
+		if err != nil {
+			return db, err
+		}
+	}
+	return db, nil
 }
