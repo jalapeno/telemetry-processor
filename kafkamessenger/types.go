@@ -1,4 +1,4 @@
-package arangodb
+package kafkamessenger
 
 import (
 	"encoding/json"
@@ -27,7 +27,7 @@ type Tags struct {
 	VrfName      string `json:"vrf_name"`
 }
 
-type Telemetry struct {
+type Vrf struct {
 	Fields    Fields `json:"fields"`
 	Name      string `json:"name"`
 	Tags      Tags   `json:"tags"`
